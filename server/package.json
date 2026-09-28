@@ -1,0 +1,41 @@
+{
+  "name": "@cmg/server",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "db:start": "node scripts/dev-db.mjs",
+    "migrate": "node dist/src/db/migrate-cli.js",
+    "seed": "node dist/src/db/seed-cli.js",
+    "seed:demo": "node dist/src/db/seed-cli.js --demo",
+    "start": "node dist/src/main.js",
+    "dev": "tsc -p tsconfig.json && concurrently -k -n tsc,api \"tsc -p tsconfig.json -w --preserveWatchOutput\" \"node --watch-path=dist/src dist/src/main.js\"",
+    "test": "tsc -p tsconfig.json && node --test --test-concurrency=1 \"dist/test/**/*.test.js\"",
+    "reset-passwords": "node dist/src/db/reset-passwords-cli.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "@nestjs/common": "^12.1.1",
+    "@nestjs/core": "^12.1.1",
+    "@nestjs/platform-express": "^12.1.1",
+    "@node-rs/argon2": "^2.2.1",
+    "compression": "^1.8.2",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.4",
+    "helmet": "^8.3.0",
+    "pg": "^8.23.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "@types/pg": "^8.23.1",
+    "concurrently": "^10.0.5",
+    "embedded-postgres": "^17.10.0-beta.17",
+    "typescript": "^7.0.2"
+  },
+  "private": true
+}

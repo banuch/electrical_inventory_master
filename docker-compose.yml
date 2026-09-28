@@ -1,0 +1,47 @@
+# Production-style deployment: PostgreSQL + API + nginx (serving the web app and proxying /api).
+# 1. cp .env.docker.example .env.docker and set strong secrets
+# 2. docker compose --env-file .env.docker up -d --build
+# 3. docker compose --env-file .env.docker exec api node dist/src/db/seed-cli.js   (first run only)
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cmg_inventory
+      POSTGRES_USER: cmg
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cmg -d cmg_inventory"]
+      interval: 10s
+      retries: 5
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      TRUST_PROXY: uniquelocal
+      DATABASE_URL: postgres://cmg:${POSTGRES_PASSWORD}@db:5432/cmg_inventory
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      SESSION_IDLE_MINUTES: ${SESSION_IDLE_MINUTES:-30}
+      SESSION_ABSOLUTE_HOURS: ${SESSION_ABSOLUTE_HOURS:-12}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-superadmin}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD}
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+
+volumes:
+  pgdata:
